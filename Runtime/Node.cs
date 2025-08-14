@@ -11,6 +11,23 @@ namespace BlueGraph
         public event Action OnValidateEvent;
         public event Action OnErrorEvent;
 
+        [SerializeField] private string _graphID;
+
+        /// <summary>
+        /// An ID for the node that is only ever set once. 
+        /// </summary>
+        public string GraphID
+        {
+            get
+            {
+                if (id == null)
+                {
+                    id = Guid.NewGuid().ToString();
+                }
+                return id;
+            }
+        }
+
         [SerializeField] private string id;
 
         public string ID
@@ -133,6 +150,9 @@ namespace BlueGraph
 
             OnValidate();
             OnValidateEvent?.Invoke();
+
+            if (GraphID == "!")
+                return;
         }
 
         /// <summary>

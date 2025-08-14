@@ -21,7 +21,7 @@ namespace BlueGraph.Editor
 
         public Graph Graph { get; private set; }
 
-        private readonly Label title;
+        private Label title;
         private readonly List<CommentView> commentViews = new List<CommentView>();
         private readonly SearchWindow searchWindow;
         private readonly EdgeConnectorListener edgeConnectorListener;
@@ -69,7 +69,7 @@ namespace BlueGraph.Editor
 
             RegisterCallback<GeometryChangedEvent>(OnFirstResize);
 
-            title = new Label("BLUEGRAPH");
+            title = new Label("BlueGraph");
             title.AddToClassList("canvasViewTitle");
             Add(title);
 
@@ -278,7 +278,7 @@ namespace BlueGraph.Editor
         /// <summary>
         /// Create a new node from reflection data and insert into the Graph.
         /// </summary>
-        internal void AddNodeFromSearch(Node node, Vector2 screenPosition, PortView connectedPort = null, bool registerUndo = true)
+        public void AddNodeFromSearch(Node node, Vector2 screenPosition, PortView connectedPort = null, bool registerUndo = true)
         {
             // Calculate where to place this node on the graph
             var windowRoot = EditorWindow.rootVisualElement;

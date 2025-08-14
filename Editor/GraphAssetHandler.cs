@@ -24,7 +24,7 @@ namespace BlueGraph.Editor
         /// <summary>
         /// Open the appropriate GraphEditor for the Graph asset
         /// </summary>
-        public static void OnOpenGraph(Graph graph)
+        public static GraphEditor OnOpenGraph(Graph graph)
         {
             var editor = UnityEditor.Editor.CreateEditor(graph) as GraphEditor;
             if (!editor)
@@ -34,7 +34,9 @@ namespace BlueGraph.Editor
             else
             {
                 editor.CreateOrFocusEditorWindow();
+                return editor;
             }
+            return null;
         }
     }
 }

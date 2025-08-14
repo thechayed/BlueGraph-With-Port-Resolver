@@ -49,6 +49,12 @@ namespace BlueGraph.Editor
             errorMessage = new Label { name = "error-label" };
             errorContainer.Add(errorMessage);
 
+            if (errorContainer != null)
+            { 
+                errorContainer.RegisterCallback<MouseEnterEvent>( (MouseEnterEvent evt) => errorMessage.name = "error-label-hover");
+                errorContainer.RegisterCallback<MouseLeaveEvent>( (MouseLeaveEvent evt) => errorMessage.name = "error-label");
+            }
+
             Insert(0, errorContainer);
 
             SetPosition(new Rect(node.Position, Vector2.one));
@@ -76,6 +82,7 @@ namespace BlueGraph.Editor
 
             OnInitialize();
         }
+
 
         /// <summary>
         /// Executed after receiving a node target and initial configuration

@@ -114,9 +114,10 @@ namespace BlueGraph
             get { return connections.Count; }
         }
 
-        internal List<Connection> Connections
+        public List<Connection> Connections
         {
             get { return connections; }
+            set { connections = value; }
         }
 
         [SerializeField] private List<Connection> connections = new List<Connection>();
@@ -292,7 +293,7 @@ namespace BlueGraph
         /// </summary>
         internal void UpdateConnections()
         {
-            if (hasLoadedConnections)
+            if (hasLoadedConnections || Node == null)
             {
                 return;
             }

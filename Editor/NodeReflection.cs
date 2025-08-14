@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -187,7 +188,7 @@ namespace BlueGraph.Editor
             contextMethods = new Dictionary<ContextMenu, MethodInfo>();
 
             var attrs = type.GetCustomAttributes(true);
-            foreach (var attr in attrs)
+            foreach (var attr in attrs.Reverse())
             {
                 if (attr is TagsAttribute tagAttr)
                 {
@@ -206,6 +207,17 @@ namespace BlueGraph.Editor
                         HasControlElement = false
                     });
                 }
+                else if (attr is InputAttribute input)
+                {
+                    Ports.Add(new PortReflectionData()
+                    {
+                        Name = input.Name,
+                        Type = input.Type,
+                        Direction = PortDirection.Input,
+                        Capacity = input.Multiple ? PortCapacity.Multiple : PortCapacity.Single,
+                        HasControlElement = false
+                    });
+                }
             }
 
             // Load additional data from class fields
@@ -214,6 +226,7 @@ namespace BlueGraph.Editor
             SetScriptNodeViewType();
             LoadContextMethods();
         }
+
 
         public bool HasInputOfType(Type type)
         {

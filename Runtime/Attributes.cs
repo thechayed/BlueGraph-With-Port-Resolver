@@ -58,7 +58,7 @@ namespace BlueGraph
     /// <summary>
     /// An input port exposed on a Node
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Class, AllowMultiple = true)]
     public class InputAttribute : Attribute
     {
         /// <summary>
@@ -67,6 +67,8 @@ namespace BlueGraph
         /// If not supplied, this will default to the field name.
         /// </summary>
         public string Name { get; set; }
+
+        public Type Type;
 
         /// <summary>
         /// Can this input accept multiple outputs at once.
@@ -78,9 +80,10 @@ namespace BlueGraph
         /// </summary>
         public bool Editable { get; set; } = true;
 
-        public InputAttribute(string name = null)
+        public InputAttribute(string name = null, Type type = null)
         {
             Name = name;
+            this.Type = type;
         }
     }
 

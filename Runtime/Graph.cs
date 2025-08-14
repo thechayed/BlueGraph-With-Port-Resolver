@@ -127,7 +127,7 @@ namespace BlueGraph
         /// <summary>
         /// Propagate OnValidate to all nodes.
         /// </summary>
-        private void OnValidate()
+        public virtual void OnValidate()
         {
             OnGraphValidate();
 

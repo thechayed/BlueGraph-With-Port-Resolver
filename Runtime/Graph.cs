@@ -222,7 +222,12 @@ namespace BlueGraph
                 }
             }
         }
-        
+
+        public Node[] GetNodeArray<TNode>() where TNode : Node
+        {
+            return NodesByTypeCache[typeof(TNode)];
+        }
+
         /// <summary>
         /// Add a new node to the Graph.
         /// 

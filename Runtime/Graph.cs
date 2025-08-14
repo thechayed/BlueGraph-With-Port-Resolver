@@ -223,7 +223,10 @@ namespace BlueGraph
             }
         }
 
-        public Node[] GetNodeArray<TNode>() where TNode : Node
+        /// <summary>
+        /// Find all nodes on the Graph of, or inherited from, the given type, from the <see cref="NodesByTypeCache"/>.
+        /// </summary>
+        public Node[] GetCachedNodes<TNode>() where TNode : Node
         {
             return NodesByTypeCache[typeof(TNode)];
         }

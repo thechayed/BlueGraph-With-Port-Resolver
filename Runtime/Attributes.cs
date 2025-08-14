@@ -232,4 +232,20 @@ namespace BlueGraph
             NodeType = nodeType;
         }
     }
+
+    /// <summary>
+    /// Tells the Node Caching system to cache the Node to a specific type. 
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public class CacheToAttribute : Attribute
+    {
+        public Type Type;
+        public bool CacheAsBoth = true;
+
+        public CacheToAttribute(Type type, bool cacheAsBoth = true)
+        {
+            Type = type;
+            CacheAsBoth = cacheAsBoth;
+        }
+    }
 }

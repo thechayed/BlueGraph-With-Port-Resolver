@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace BlueGraph
@@ -122,6 +123,23 @@ namespace BlueGraph
 
         [SerializeField] private List<Connection> connections = new List<Connection>();
 
+        [SerializeField]
+        private string id;
+        /// <summary>
+        /// The Port ID is stored in the Graph's ConnectionCache to rebuild broken connections.
+        /// </summary>
+        public string ID
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    id = Guid.NewGuid().ToString();
+                }
+                return id;
+            }
+        }
+
         /// <summary>
         /// Enumerate all ports connected by edges to this port
         /// </summary>
@@ -236,10 +254,10 @@ namespace BlueGraph
         ///
         /// Use <c>Graph.AddEdge()</c> over this.
         /// </summary>
-        internal void Connect(Port port)
+        internal void Connect(Port port, bool force = false)
         {
             // Skip if we're already connected
-            if (GetConnection(port) != null)
+            if (!force && GetConnection(port) != null)
             {
                 return;
             }

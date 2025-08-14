@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Threading.Tasks;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -13,12 +14,17 @@ namespace BlueGraph.Editor
 
         public Graph Graph { get; protected set; }
 
+        private int cacheDelay = 10;
+        private int cacheTick = 0;
+
         /// <summary>
         /// Load a graph asset in this window for editing
         /// </summary>
         public virtual void Load(Graph graph)
         {
             Graph = graph;
+            Graph.IsBeingEditted = true;
+            Graph.ReconstructPortConnections();
 
             Canvas = new CanvasView(this);
             Canvas.Load(graph);
@@ -29,6 +35,29 @@ namespace BlueGraph.Editor
             Repaint();
         }
 
+        private void OnDestroy()
+        {
+            OnClose();
+        }
+
+        protected virtual void OnFocus()
+        {
+            if (Graph != null)   
+                Graph.IsBeingEditted = true;
+        }
+
+        protected virtual void OnLostFocus()
+        {
+            if (Graph != null)
+                Graph.IsBeingEditted = false;
+        }
+
+        /// <summary>
+        /// Override to add additional functional to the closing functionality of the Graph Editor.
+        /// </summary>
+        protected virtual void OnClose() 
+        { }
+
         protected virtual void Update()
         {
             // Canvas can be invalidated when the Unity Editor
@@ -37,6 +66,20 @@ namespace BlueGraph.Editor
             {
                 Close();
                 return;
+            }
+
+            cacheTick++;
+
+            if(cacheTick%cacheDelay == 0)
+            {
+                if (Application.isPlaying)
+                {
+                    Graph?.ReconstructPortConnections();
+                }
+                else
+                {
+                    Graph?.CachePortConnections();
+                }
             }
 
             Canvas.Update();
@@ -51,6 +94,13 @@ namespace BlueGraph.Editor
             {
                 Load(Graph);
             }
+        }
+
+        private Task NextEditorFrame()
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            EditorApplication.delayCall += () => tcs.SetResult(true);
+            return tcs.Task;
         }
     }
 }

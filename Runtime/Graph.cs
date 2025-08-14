@@ -1,6 +1,12 @@
-﻿using System;
+﻿using BlueGraph.Utils;
+using BlueGraph.Utils.Remedy.Framework;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.MemoryProfiler;
 using UnityEngine;
 
 namespace BlueGraph
@@ -33,6 +39,8 @@ namespace BlueGraph
             get { return "BLUEGRAPH"; }
         }
 
+        public bool IsBeingEditted = false;
+
         /// <summary>
         /// Retrieve the min zoom value scale used by CanvasView
         /// 
@@ -64,6 +72,25 @@ namespace BlueGraph
                 #endif
             }
         }
+
+        [SerializeField]
+        private SerializableDictionary<SerializableType, Node[]> nodeByTypeCache;
+        /// <summary>
+        /// The nodes Cached in the Graph, by their type so they can be easily queried. 
+        /// </summary>
+        protected SerializableDictionary<SerializableType, Node[]> NodesByTypeCache => nodeByTypeCache ??= new();
+        /// <summary>
+        /// The cached connections between nodes from the Schematics Editor in a Dictionary that allows them to be reconstructed if they're lost. 
+        /// </summary>
+        [SerializeField]
+        [HideInInspector]
+        internal SerializableDictionary<string, string[]> portConnectionCache = new();
+        /// <summary>
+        /// A Cache pairing Port IDs to their Ports that is concstructed at Runtime to improve Port Lookup time
+        /// </summary>
+        [SerializeField]
+        [HideInInspector]
+        private SerializableDictionary<string, Port> runtimePortCache = new();
 
         /// <summary>
         /// Retrieve all nodes on this graph
@@ -98,6 +125,7 @@ namespace BlueGraph
         [SerializeField, HideInInspector] 
         private int assetVersion = 1;
 
+
         /// <summary>
         /// Propagate OnDisable to all nodes.
         /// </summary>
@@ -129,6 +157,9 @@ namespace BlueGraph
         /// </summary>
         public virtual void OnValidate()
         {
+            if (!Application.isPlaying)
+                CacheNodesByType();
+
             OnGraphValidate();
 
             foreach (var node in Nodes)
@@ -253,6 +284,119 @@ namespace BlueGraph
             node.DisconnectAllPorts();
             nodes.Remove(node);
             node.Graph = null;
+        }
+
+        /// <summary>
+        /// Caches the Connections between ports so they can be recreated if they are lost at Runtime.
+        /// </summary>
+        public void CachePortConnections()
+        {
+            portConnectionCache.Clear();
+
+            foreach (var node in Nodes)
+            {
+                foreach(var kvp in node.Ports)
+                {
+                    int connectionCount = kvp.Value.ConnectedPorts.Count();
+
+                    portConnectionCache[kvp.Value.ID] = new string[connectionCount];
+
+                    if (connectionCount == 0) continue;
+
+                    for (int i = 0; i < connectionCount; i++)
+                    {
+                        portConnectionCache[kvp.Value.ID][i] = kvp.Value.ConnectedPorts.ElementAt(i).ID;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Caches all the Nodes in the Graph By Type in the <see cref="NodesByTypeCache"/> Dictionary
+        /// </summary>
+        public void CacheNodesByType()
+        {
+            NodesByTypeCache.Clear();
+            ResetExtendedNodeCaches();
+
+            foreach (var node in Nodes)
+            {
+                var attr = node.GetType().GetCustomAttribute<CacheToAttribute>(false);
+                CacheNodeByType(node, attr);
+            }
+        }
+
+        /// <summary>
+        /// Override this to handle the clearing of extended Node Caches
+        /// </summary>
+        protected virtual void ResetExtendedNodeCaches()
+        { }
+
+        /// <summary>
+        /// Override this for cache handling. 
+        /// </summary>
+        /// <param name="node"></param>
+        protected virtual void CacheNodeByType(Node node, CacheToAttribute attr)
+        {
+            if (attr != null)
+            {
+                if (!NodesByTypeCache.ContainsKey(attr.Type))
+                    NodesByTypeCache.Add(attr.Type, new Node[0]);
+                NodesByTypeCache[attr.Type] = NodesByTypeCache[attr.Type].Append((Node)node).ToArray();
+            }
+            if (attr == null || attr.CacheAsBoth)
+            {
+                var type = node.GetType();
+
+                if (!NodesByTypeCache.ContainsKey(type) || NodesByTypeCache[type] == null)
+                    NodesByTypeCache[type] = new Node[0];
+                NodesByTypeCache[type] = NodesByTypeCache[type].Append((Node)node).ToArray();
+            }
+        }
+
+        /// <summary>
+        /// Uses the previously Cached Node Port information to Reconstruct the Graph during runtime.
+        /// </summary>
+        public void ReconstructPortConnections()
+        {
+            foreach(var node in Nodes)
+            {
+                foreach(var kvp in node.Ports)
+                {
+                    if (!portConnectionCache.ContainsKey(kvp.Value.ID)) continue;
+
+                    foreach (var connectedPortID in portConnectionCache[kvp.Value.ID])
+                    {
+                        var portToConnect = FindPortByID(connectedPortID);
+
+                        if(portToConnect != null && !kvp.Value.ConnectedPorts.Any(port => port.ID == connectedPortID))
+                            kvp.Value.Connect(portToConnect, true);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Searches through all the ports of all the nodes in the graph to find a port with a matching ID.
+        /// </summary>
+        /// <param name="portID"></param>
+        /// <returns></returns>
+        private Port FindPortByID(string portID)
+        {
+            if (runtimePortCache.ContainsKey(portID))
+                return runtimePortCache[portID];
+            else
+            {
+                foreach(var node in Nodes)
+                {
+                    foreach(var kvp in node.Ports)
+                    {
+                        if (kvp.Value.ID == portID)
+                            return kvp.Value;
+                    }
+                }
+            }
+            return null;
         }
 
         /// <summary>

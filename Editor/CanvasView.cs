@@ -224,6 +224,9 @@ namespace BlueGraph.Editor
         public void Load(Graph graph)
         {
             Graph = graph;
+
+            graph.ReconstructPortConnections();
+
             serializedGraph = new SerializedObject(Graph);
             title.text = graph.Title;
             SetupZoom(graph.ZoomMinScale, graph.ZoomMaxScale);
@@ -267,8 +270,6 @@ namespace BlueGraph.Editor
                         node.Name = required.nodeName;
                         node.Position = required.position;
                         AddNodeFromSearch(node, node.Position, null, false);
-
-
                     }
 
                 }

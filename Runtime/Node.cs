@@ -150,9 +150,6 @@ namespace BlueGraph
 
             OnValidate();
             OnValidateEvent?.Invoke();
-
-            if (GraphID == "!")
-                return;
         }
 
         /// <summary>

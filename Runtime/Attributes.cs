@@ -236,7 +236,7 @@ namespace BlueGraph
     /// <summary>
     /// Tells the Node Caching system to cache the Node to a specific type. 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public class CacheToAttribute : Attribute
     {
         public Type Type;

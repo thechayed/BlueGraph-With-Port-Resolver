@@ -56,5 +56,4 @@ namespace BlueGraph.Utils
 
         public static bool operator !=(SerializableType a, SerializableType b) => !(a == b);
     }
-
 }
